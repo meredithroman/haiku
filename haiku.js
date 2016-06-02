@@ -1,16 +1,20 @@
 var fs = require("fs");
 
-function createHaiku(haikuStructure, data) {
+function createHaiku(haikuStructure, syllabelsArr) {
     var haiku = "";
     haikuStructure.forEach( function(numSyllables) {
         var line = _getSyllables(numSyllables);
+        
+
         line.forEach( function(syl) {
-            var validWords = data.filter(function(word) { return syl == word[2]; });
-            var random = Math.floor(Math.random() * validWords.length) + 1;
-            haiku += validWords[random] + " " + line + " ";
+            var validWords = syllabelsArr[syl];
+            var random = _randRange(0, validWords.length);
+            haiku += validWords[random][0] + " ";
         })
+
         haiku += "\n";
     });
+    haiku = haiku.replace(/\(\d\)/g, "");
     return haiku;
 }
 
@@ -23,47 +27,42 @@ function formatData(data) {
     var formatted = [];
     lines.forEach(function(line) {
         var lineSplit = line.split("  ");
-        if (lineSplit[1]) {
-            var numSyllables = lineSplit[1].split(" ").length;
-            lineSplit.push(numSyllables);
+        var numSyllables = lineSplit[1].split(" ").length;
+        if (formatted[numSyllables] == undefined) {
+            formatted[numSyllables] = [];
         }
-        formatted.push(lineSplit);
+        formatted[numSyllables].push(lineSplit);
     });
     return formatted;
 }
 
-/*function _sortData(data) {
-    var count = 0;
-    var sortedData = [];
-    while (data.length > 0) {
-        count++;
-        var sort = [];
-        for (var i = 0; i < data.length; i++) {
-            data[i].pop()
-        };
-
-    }
-}*/
-
 function _getSyllables(num) {
-    // array to store syllables
     var syllables = [];
-    // keep a count of the number of syllables we have
     var totalSyllables = 0;
-    // hold the value of the largest number we want
     var max = num;
 
     while (totalSyllables < num) {
-        // get a number between 1 (inclusive) and max (inclusive)
-        var random = Math.floor(Math.random() * max) + 1;
-        // add that number to syllables
+        // an attempt to recude the frequency of 1 syllable words
+        // randomly generated poetry is hard
+        if (syllables.length == 0) {
+            var random = _randRange(2, max + 1)
+            if (random == 5) {
+                random = _randRange(2, 5)
+            }
+        } else {
+            var random = _randRange(1, max + 1)
+        }
         syllables.push(random);
         // get the number of syllables we have stored and update the count
         totalSyllables = syllables.reduce(function(a, b) { return a + b });
-        // update max
         max = num - totalSyllables;
     }
     return syllables;
+}
+
+// get random interger between min (inclusive) and max (exclusive)
+function _randRange(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
 }
 
 module.exports = {
